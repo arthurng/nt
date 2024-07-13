@@ -1,0 +1,70 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1, minimum-scale=1, user-scalable=no" name="viewport" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <title>Next Train</title>
+    <style>
+        html, body { margin: 0px; padding: 0px; font-size: 20px; font-family: -apple-system; }
+        .sta { background-color: #c0c0c0; margin: 15px; }
+        .dest { margin-top: 10px; }
+        .ttnt { float: right; }
+        .sTCL { color: orange }
+        .sISL { color: blue }
+        .sTML { color: brown }
+    </style>
+</head>
+<body>
+    3
+    <div id="banner" style="text-align: center;"></div>
+    <div id="main"></div>
+    <!-- template -->
+    <template id="Tsta"><div class="sta"><div>{{sta}}</div><div>{{{dests}}}</div></div></template>
+    <template id="TstaDest"><div class="dest"><span class="s{{line}}">{{dest}}</span><span class="ttnt">{{ttnt}}</span></div></template>
+    <script src="mustache.min.js"></script>
+    <script>
+        const $ = document.querySelector.bind( document );
+        const STA_CHINESE = {"ADM":"金鐘", "AIR":"機場", "AUS":"柯士甸", "AWE":"博覽館", "CAB":"銅鑼灣", "CEN":"中環", "CHH":"彩虹", "CHW":"柴灣", "CIO":"第一城", "CKT":"車公廟", "CSW":"長沙灣", "DIH":"鑽石山", "DIS":"迪士尼", "ETS":"尖東", "EXC":"會展", "FAN":"粉嶺", "FOH":"炮台山", "FOT":"火炭", "HAH":"坑口", "HEO":"恆安", "HFC":"杏花邨", "HIK":"顯徑", "HKU":"香港大學", "HOK":"香港", "HOM":"何文田", "HUH":"紅磡", "JOR":"佐敦", "KAT":"啟德", "KET":"堅尼地城", "KOB":"九龍灣", "KOT":"九龍塘", "KOW":"九龍", "KSR":"錦上路", "KWF":"葵芳", "KWH":"葵興", "KWT":"觀塘", "LAK":"茘景", "LAT":"藍田", "LCK":"茘枝角", "LET":"利東", "LHP":"康城", "LMC":"落馬洲", "LOF":"樂富", "LOP":"朗屏", "LOW":"羅湖", "MEF":"美孚", "MKK":"旺角東", "MOK":"旺角", "MOS":"馬鞍山", "NAC":"南昌", "NOP":"北角", "NTK":"牛頭角", "OCP":"海洋公園", "OLY":"奧運", "POA":"寶琳", "PRE":"太子", "QUB":"鰂魚涌", "SHM":"石門", "SHS":"上水", "SHT":"沙田", "SHW":"上環", "SIH":"兆康", "SKM":"石硤尾", "SKW":"筲箕灣", "SOH":"海怡半島", "SSP":"深水埗", "STW":"沙田圍", "SUN":"欣澳", "SUW":"宋皇臺", "SWH":"西灣河", "SYP":"西營盤", "TAK":"太古", "TAP":"大埔墟", "TAW":"大圍", "TIH":"天后", "TIK":"調景嶺", "TIS":"天水圍", "TKO":"將軍澳", "TKW":"土瓜灣", "TSH":"大水坑", "TST":"尖沙咀", "TSW":"荃灣", "TSY":"青衣", "TUC":"東涌", "TUM":"屯門", "TWH":"大窩口", "TWO":"太和", "TWW":"荃灣西", "UNI":"大學", "WAC":"灣仔", "WCH":"黃竹坑", "WHA":"黃埔", "WKS":"烏溪沙", "WTS":"黃大仙", "YAT":"油塘", "YMT":"油麻地", "YUL":"元朗"};
+        var STATIONS = {
+            'CEN': {'ISL':{}},
+            'SYP': {'ISL':{}},
+            'HOK': {'TCL':{}, 'AEL':{}},
+            'NAC': {'TCL':{}, 'TML':{}}
+        };
+        var STATIONS = JSON.parse('{"CEN":{"ISL":{"CHW":[{"seq":"1","dest":"CHW","plat":"3","time":"2024-07-13 21:42:27","ttnt":"4","valid":"Y","source":"-"},{"seq":"2","dest":"CHW","plat":"3","time":"2024-07-13 21:48:27","ttnt":"10","valid":"Y","source":"-"},{"seq":"3","dest":"CHW","plat":"3","time":"2024-07-13 21:53:27","ttnt":"15","valid":"Y","source":"-"},{"seq":"4","dest":"CHW","plat":"3","time":"2024-07-13 21:58:27","ttnt":"20","valid":"Y","source":"-"}],"KET":[{"seq":"1","dest":"KET","plat":"4","time":"2024-07-13 21:39:27","ttnt":"1","valid":"Y","source":"-"},{"seq":"2","dest":"KET","plat":"4","time":"2024-07-13 21:45:27","ttnt":"7","valid":"Y","source":"-"},{"seq":"3","dest":"KET","plat":"4","time":"2024-07-13 21:49:27","ttnt":"11","valid":"Y","source":"-"},{"seq":"4","dest":"KET","plat":"4","time":"2024-07-13 21:55:27","ttnt":"17","valid":"Y","source":"-"}]}},"SYP":{"ISL":{"CHW":[{"seq":"1","dest":"CHW","plat":"1","time":"2024-07-13 21:38:27","ttnt":"0","valid":"Y","source":"-"},{"seq":"2","dest":"CHW","plat":"1","time":"2024-07-13 21:44:27","ttnt":"6","valid":"Y","source":"-"},{"seq":"3","dest":"CHW","plat":"1","time":"2024-07-13 21:49:27","ttnt":"11","valid":"Y","source":"-"},{"seq":"4","dest":"CHW","plat":"1","time":"2024-07-13 21:54:27","ttnt":"16","valid":"Y","source":"-"}],"KET":[{"seq":"1","dest":"KET","plat":"2","time":"2024-07-13 21:39:27","ttnt":"1","valid":"Y","source":"-"},{"seq":"2","dest":"KET","plat":"2","time":"2024-07-13 21:43:27","ttnt":"5","valid":"Y","source":"-"},{"seq":"3","dest":"KET","plat":"2","time":"2024-07-13 21:49:27","ttnt":"11","valid":"Y","source":"-"},{"seq":"4","dest":"KET","plat":"2","time":"2024-07-13 21:53:27","ttnt":"15","valid":"Y","source":"-"}]}},"HOK":{"TCL":{"TUC":[{"ttnt":"4","valid":"Y","plat":"3","time":"2024-07-13 21:42:00","source":"-","dest":"TUC","seq":"1"},{"ttnt":"13","valid":"Y","plat":"3","time":"2024-07-13 21:51:00","source":"+","dest":"TUC","seq":"2"},{"ttnt":"20","valid":"Y","plat":"3","time":"2024-07-13 21:59:00","source":"+","dest":"TUC","seq":"3"},{"ttnt":"29","valid":"Y","plat":"3","time":"2024-07-13 22:07:00","source":"+","dest":"TUC","seq":"4"}]},"AEL":{"AWE":[{"ttnt":"1","valid":"Y","plat":"1","time":"2024-07-13 21:39:00","source":"-","dest":"AWE","seq":"1"},{"ttnt":"11","valid":"Y","plat":"1","time":"2024-07-13 21:50:00","source":"+","dest":"AWE","seq":"2"},{"ttnt":"22","valid":"Y","plat":"1","time":"2024-07-13 22:00:00","source":"+","dest":"AWE","seq":"3"},{"ttnt":"32","valid":"Y","plat":"1","time":"2024-07-13 22:10:00","source":"+","dest":"AWE","seq":"4"}]}},"NAC":{"TCL":{"TUC":[{"ttnt":"6","valid":"Y","plat":"3","time":"2024-07-13 21:44:00","source":"-","dest":"TUC","seq":"1"},{"ttnt":"12","valid":"Y","plat":"3","time":"2024-07-13 21:51:00","source":"+","dest":"TUC","seq":"2"},{"ttnt":"20","valid":"Y","plat":"3","time":"2024-07-13 21:58:00","source":"+","dest":"TUC","seq":"3"},{"ttnt":"27","valid":"Y","plat":"3","time":"2024-07-13 22:06:00","source":"+","dest":"TUC","seq":"4"}],"HOK":[{"ttnt":"1","valid":"Y","plat":"4","time":"2024-07-13 21:38:00","source":"-","dest":"HOK","seq":"1"},{"ttnt":"9","valid":"Y","plat":"4","time":"2024-07-13 21:47:00","source":"-","dest":"HOK","seq":"2"},{"ttnt":"18","valid":"Y","plat":"4","time":"2024-07-13 21:55:00","source":"-","dest":"HOK","seq":"3"},{"ttnt":"26","valid":"Y","plat":"4","time":"2024-07-13 22:04:00","source":"+","dest":"HOK","seq":"4"}]},"TML":{"TUM":[{"seq":"1","dest":"TUM","plat":"1","time":"2024-07-13 21:40:22","ttnt":"2","valid":"Y","source":"-"},{"seq":"2","dest":"TUM","plat":"1","time":"2024-07-13 21:46:22","ttnt":"8","valid":"Y","source":"-"},{"seq":"3","dest":"TUM","plat":"1","time":"2024-07-13 21:52:22","ttnt":"14","valid":"Y","source":"-"},{"seq":"4","dest":"TUM","plat":"1","time":"2024-07-13 21:58:22","ttnt":"20","valid":"Y","source":"-"}],"WKS":[{"seq":"1","dest":"WKS","plat":"2","time":"2024-07-13 21:40:22","ttnt":"2","valid":"Y","source":"-"},{"seq":"2","dest":"WKS","plat":"2","time":"2024-07-13 21:45:22","ttnt":"7","valid":"Y","source":"-"},{"seq":"3","dest":"WKS","plat":"2","time":"2024-07-13 21:51:22","ttnt":"13","valid":"Y","source":"-"},{"seq":"4","dest":"WKS","plat":"2","time":"2024-07-13 21:57:22","ttnt":"19","valid":"Y","source":"-"}]}}}');
+        // g - fetching from web and put the latest into STATIONS
+        let g = async (l,s) => {
+            let u = `https://rt.data.gov.hk/v1/transport/mtr/getSchedule.php?line=${l}&sta=${s}`; console.log(u);
+            return fetch(u).then(x=>x.json()).then(o => {
+                Object.entries(o['data']).forEach(([p,d]) => {
+                    Object.entries((Object.groupBy([d.UP??[], d.DOWN??[]].flat(1), ({dest})=>dest))).forEach(([dest,time]) => {
+                        STATIONS[s][l][dest] = time; r();
+                    });
+                });
+            });
+        }
+        // r - generate HTML and render (order: sta -> line -> dest -> time)
+        let r = () => {
+            let currTime = new Date();
+            let ss = Object.entries(STATIONS).map(([sta, line_dict]) => {
+                let dests = Object.entries(line_dict).map(([line, dest_dict]) => {
+                    return Object.entries(dest_dict).map(([dest, time_list]) => {
+                        let ttnt = time_list.map((x) => {
+                            return x.ttnt // Math.floor((new Date(x.time)-currTime)/60000)
+                        }).join(', ');
+                        return Mustache.render($('#TstaDest').innerHTML, {line, dest: time_list[0].plat + ' ' + STA_CHINESE[dest], ttnt});
+                    }).join('');
+                }).join('');
+                return Mustache.render($('#Tsta').innerHTML, {sta: STA_CHINESE[sta], dests});
+            }).join('');
+            $('#main').innerHTML = ss;
+            $('#banner').innerText = new Date();
+        }
+        // Running the actual fetch in a loop
+        // Object.entries(STATIONS).forEach(([s,ls]) => { Object.keys(ls).forEach(l => g(l,s)) });
+        r();
+    </script>
+</body>
+</html>
