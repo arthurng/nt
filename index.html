@@ -28,7 +28,7 @@
     </style>
 </head>
 <body>
-    <div id="titl">Next Train<div id="time"></div></div>
+    <div id="titl"><span>Next Train</span><div id="time"></div></div>
     <img id="spin" src="loading.gif" />
     <div id="main"></div>
     <!-- template -->
@@ -47,7 +47,7 @@
         let d = (d1,d2) => { let latitude=d1.latitude-d2.latitude, longitude=d1.longitude-d2.longitude; return 100000*Math.sqrt(latitude*latitude+longitude*longitude) }
         // g - fetching from web and put the latest into STATIONS
         let g = async (l,s) => {
-            let u = `https://rt.data.gov.hk/v1/transport/mtr/getSchedule.php?line=${l}&sta=${s}`; console.log(u);
+            let u = `https://rt.data.gov.hk/v1/transport/mtr/getSchedule.php?line=${l}&sta=${s}`; // console.log(u);
             return fetch(u).then(x=>x.json()).then(o => {
                 Object.entries(o['data']).forEach(([p,d]) => {
                     Object.entries((Object.groupBy([d.UP??[], d.DOWN??[]].flat(1), ({plat})=>plat))).forEach(([plat,time]) => {
@@ -93,7 +93,7 @@
         if (window.location.host.indexOf('1')===0) {
             f(); $('#titl').addEventListener('touchstart', f);
         } else {
-            $('#titl').innerText = 'Unknown User';
+            $('#titl>span').innerText = 'Unknown User';
             crypto.subtle.digest('SHA-256', new TextEncoder().encode(window.location.href.split('?')[1]))
                 .then(x=>Array.from(new Uint8Array(x)))
                 .then(x=>x.map(b => b.toString(16).padStart(2, '0')).join(''))
