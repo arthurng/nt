@@ -64,7 +64,7 @@
         let r = () => {
             setTimeout(() => {$('#spin').style.display = 'none'}, 300);
             let currTime = new Date();
-            let ss = Object.entries(STATIONS).map(([sta, line_dict]) => {
+            let ss = Object.entries(STATIONS).sort((a,b)=>PROX_STA.indexOf(a[0])>=0?(PROX_STA.indexOf(b[0])>=0?0:-1):0).map(([sta, line_dict]) => {
                 let plats = Object.entries(line_dict).map(([line, plat_dict]) => {
                     return Object.entries(plat_dict).map(([plat, time_list]) => {
                         // Math.floor((new Date(x.time)-currTime)/60000)
@@ -85,9 +85,7 @@
                 t.except(PROX_STA.concat(DEFAULT_STA)).forEach(x => STATIONS[x] = REF[x].line); // add
                 PROX_STA.except(t.except(DEFAULT_STA)).forEach(x => {delete STATIONS[x]}); // remove
                 PROX_STA = t;
-                Object.entries(STATIONS)
-                    .sort((a,b)=>PROX_STA.indexOf(a[0])>=0?(PROX_STA.indexOf(b[0])>=0?0:-1):0)
-                    .forEach(([s,ls]) => { Object.keys(ls).forEach(l => g(l,s)) });
+                Object.entries(STATIONS).forEach(([s,ls]) => { Object.keys(ls).forEach(l => g(l,s)) });
             }, () => {
                 Object.entries(STATIONS).forEach(([s,ls]) => { Object.keys(ls).forEach(l => g(l,s)) });
             });
