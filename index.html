@@ -83,7 +83,7 @@
             navigator.geolocation.getCurrentPosition(x => {
                 let t = STA_COORD.filter(y=>d(x.coords,y)<=500).map(y=>y.sta);
                 t.except(PROX_STA.concat(DEFAULT_STA)).forEach(x => STATIONS[x] = REF[x].line); // add
-                PROX_STA.except(t.except(DEFAULT_STA)).forEach(x => {delete STATIONS[x]}); // remove
+                PROX_STA.except(t).except(DEFAULT_STA).forEach(x => {delete STATIONS[x]}); // remove
                 PROX_STA = t;
                 Object.entries(STATIONS).forEach(([s,ls]) => { Object.keys(ls).forEach(l => g(l,s)) });
             }, () => {
