@@ -73,7 +73,7 @@
         // f - running the actual fetch in a loop
         let f = () => {
             navigator.geolocation.getCurrentPosition(x => {
-                console.log(x); let t = STA_COORD.filter(s=>d(x,s)<=500).map(s=>x.sta);
+                console.log(x); let t = STA_COORD.filter(y=>d(x.coords,y)<=500).map(y=>y.sta);
                 t.except(PROX_STA.concat(DEFAULT_STA)).forEach(x => STATIONS[x] = REF[x].line); // add
                 PROX_STA.except(t.except(DEFAULT_STA)).forEach(x => {delete STATIONS[x]}); // remove
                 PROX_STA = t;
