@@ -92,10 +92,15 @@
         // feel free to fork this and make it usable for yourself
         if (window.location.host.indexOf('1')===0) {
             f(); $('#titl').addEventListener('touchstart', f);
-        } else if ('c0f3a4bad8c9b0e6f89d5624668f3df44f93bb7971323b496c0f3cd79f9f592c' === await (crypto.subtle.digest('SHA-256', new TextEncoder().encode(window.location.href.split('?')[1])).then(x=>Array.from(new Uint8Array(x))).then(x=>x.map(b => b.toString(16).padStart(2, '0')).join('')))) {
-            f(); $('#titl').addEventListener('touchstart', f);
         } else {
             $('#titl').innerText = 'Unknown User';
+            crypto.subtle.digest('SHA-256', new TextEncoder().encode(window.location.href.split('?')[1]))
+                .then(x=>Array.from(new Uint8Array(x)))
+                .then(x=>x.map(b => b.toString(16).padStart(2, '0')).join(''))
+                .then(h=>{if(h==='c0f3a4bad8c9b0e6f89d5624668f3df44f93bb7971323b496c0f3cd79f9f592c'){
+                    f(); $('#titl').addEventListener('touchstart', f);
+                }
+            });
         }
         main.style.height = window.innerHeight - 50;
         // debug
