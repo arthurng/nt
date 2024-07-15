@@ -3,18 +3,19 @@
     <meta charset="utf-8" />
     <meta content="width=device-width, initial-scale=1, minimum-scale=1, user-scalable=no" name="viewport" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
-    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <title>Next Train</title>
     <style>
+        ::-webkit-scrollbar { display: none }
         html,
         body  { margin: 0px; padding: 0px; font-family: -apple-system, Arial; background-color: #e0e0e0;
                 -webkit-user-select: none; user-select: none; -webkit-tap-highlight-color: transparent; overflow: hidden; }
-        #titl { text-align: center; font-weight: bold; margin: 10px 0px 20px 0px; }
-        .sta  { background-color: #d0d0d0; margin: 10px; padding: 10px; border-radius: 5px; font-weight: bold; }
+        #spin { display: none; width: 20px; position: absolute; top: 10px; right: 30px; }
+        #titl { text-align: center; margin: 5px 0px; font-weight: bold; }
+        #time { margin: 5px 0px; padding: 0px 20px; font-size: 10px; color: #a0a0a0; font-style: italic; }
+        .sta  { background-color: #d0d0d0; margin: 5px 10px 15px 10px; padding: 10px; border-radius: 5px; font-weight: bold; }
         .name { font-size: 20px; margin-bottom: 20px; }
-        #main { height: calc(100%-50px); }
-        #time { margin: 10px 20px; font-size: 10px; color: #a0a0a0; font-style: italic; }
-        .prox { color: red; }
+        #main { overflow: scroll; border-top: 2px #e0e0e0 solid; scrollbar-color: red; } #main.scrolling { border-top: 2px #999 solid; }
         .dest { margin-top: 5px; color: white; padding: 5px; border-radius: 5px; }
         .plat { display: inline-block; width: 15px; margin-right: 5px; text-align: center; }
         .ttnt { float: right; }
@@ -22,12 +23,13 @@
         .sISL { background-color: #007DC5 }
         .sTML { background-color: #923011 }
         .sAEL { background-color: #00888A }
-        .sTWL { background-color: #ED1D24;}
+        .sTWL { background-color: #ED1D24 }
+        #bpad { height: 50px; }
     </style>
 </head>
 <body>
-    <div id="titl">Next Train</div>
-    <div id="time" style="text-align: right;"></div>
+    <div id="titl">Next Train<div id="time"></div></div>
+    <img id="spin" src="loading.gif" />
     <div id="main"></div>
     <!-- template -->
     <template id="Tsta"><div class="sta"><div class="name">{{sta}} {{prox}}</div><div>{{{plats}}}</div></div></template>
@@ -56,6 +58,7 @@
         }
         // r - generate HTML and render (order: sta -> line -> dest -> time)
         let r = () => {
+            setTimeout(() => {$('#spin').style.display = 'none'}, 300);
             let currTime = new Date();
             let ss = Object.entries(STATIONS).map(([sta, line_dict]) => {
                 let plats = Object.entries(line_dict).map(([line, plat_dict]) => {
@@ -67,13 +70,14 @@
                 }).join('');
                 return Mustache.render($('#Tsta').innerHTML, {sta: REF[sta].chi, prox: PROX_STA.indexOf(sta)>=0?'📍':'',  plats});
             }).join('');
-            $('#main').innerHTML = ss;
+            $('#main').innerHTML = ss + "<div id='bpad'></div>";
             $('#time').innerText = 'Last update: ' + new Date().toLocaleTimeString();
         }
         // f - running the actual fetch in a loop
         let f = () => {
+            $('#spin').style.display = 'block';
             navigator.geolocation.getCurrentPosition(x => {
-                console.log(x); let t = STA_COORD.filter(y=>d(x.coords,y)<=500).map(y=>y.sta);
+                let t = STA_COORD.filter(y=>d(x.coords,y)<=500).map(y=>y.sta);
                 t.except(PROX_STA.concat(DEFAULT_STA)).forEach(x => STATIONS[x] = REF[x].line); // add
                 PROX_STA.except(t.except(DEFAULT_STA)).forEach(x => {delete STATIONS[x]}); // remove
                 PROX_STA = t;
@@ -84,10 +88,18 @@
         }
         // initialize
         var STATIONS = Object.fromEntries(DEFAULT_STA.map(s=>[s, REF[s].line]));
-        f(); $('#titl').addEventListener('click', f);
+        let main = $('#main'); main.addEventListener('scroll', x=> { main.className = x.target.scrollTop>5?'scrolling':''});
+        // feel free to fork this and make it usable for yourself
+        if (window.location.host.indexOf('1')===0) {
+            f(); $('#titl').addEventListener('touchstart', f);
+        } else if ('c0f3a4bad8c9b0e6f89d5624668f3df44f93bb7971323b496c0f3cd79f9f592c' === await (crypto.subtle.digest('SHA-256', new TextEncoder().encode(window.location.href.split('?')[1])).then(x=>Array.from(new Uint8Array(x))).then(x=>x.map(b => b.toString(16).padStart(2, '0')).join('')))) {
+            f(); $('#titl').addEventListener('touchstart', f);
+        } else {
+            $('#titl').innerText = 'Unknown User';
+        }
+        main.style.height = window.innerHeight - 50;
         // debug
-        // var STATIONS = JSON.parse("{\"NAC\":{\"TML\":{\"1\":[{\"seq\":\"1\",\"dest\":\"TUM\",\"plat\":\"1\",\"time\":\"2024-07-15 13:41:22\",\"ttnt\":\"1\",\"valid\":\"Y\",\"source\":\"-\"},{\"seq\":\"2\",\"dest\":\"TUM\",\"plat\":\"1\",\"time\":\"2024-07-15 13:48:22\",\"ttnt\":\"8\",\"valid\":\"Y\",\"source\":\"-\"},{\"seq\":\"3\",\"dest\":\"TUM\",\"plat\":\"1\",\"time\":\"2024-07-15 13:55:22\",\"ttnt\":\"15\",\"valid\":\"Y\",\"source\":\"-\"},{\"seq\":\"4\",\"dest\":\"TUM\",\"plat\":\"1\",\"time\":\"2024-07-15 14:02:22\",\"ttnt\":\"22\",\"valid\":\"Y\",\"source\":\"-\"}],\"2\":[{\"seq\":\"1\",\"dest\":\"WKS\",\"plat\":\"2\",\"time\":\"2024-07-15 13:42:22\",\"ttnt\":\"2\",\"valid\":\"Y\",\"source\":\"-\"},{\"seq\":\"2\",\"dest\":\"WKS\",\"plat\":\"2\",\"time\":\"2024-07-15 13:49:22\",\"ttnt\":\"9\",\"valid\":\"Y\",\"source\":\"-\"},{\"seq\":\"3\",\"dest\":\"WKS\",\"plat\":\"2\",\"time\":\"2024-07-15 13:56:22\",\"ttnt\":\"16\",\"valid\":\"Y\",\"source\":\"-\"},{\"seq\":\"4\",\"dest\":\"WKS\",\"plat\":\"2\",\"time\":\"2024-07-15 14:03:22\",\"ttnt\":\"23\",\"valid\":\"Y\",\"source\":\"-\"}]},\"TCL\":{\"3\":[{\"ttnt\":\"2\",\"valid\":\"Y\",\"plat\":\"3\",\"time\":\"2024-07-15 13:41:00\",\"source\":\"-\",\"dest\":\"TUC\",\"seq\":\"1\"},{\"ttnt\":\"8\",\"valid\":\"Y\",\"plat\":\"3\",\"time\":\"2024-07-15 13:49:00\",\"source\":\"+\",\"dest\":\"TUC\",\"seq\":\"2\"},{\"ttnt\":\"15\",\"valid\":\"Y\",\"plat\":\"3\",\"time\":\"2024-07-15 13:55:00\",\"source\":\"+\",\"dest\":\"TUC\",\"seq\":\"3\"},{\"ttnt\":\"22\",\"valid\":\"Y\",\"plat\":\"3\",\"time\":\"2024-07-15 14:03:00\",\"source\":\"+\",\"dest\":\"TUC\",\"seq\":\"4\"}],\"4\":[{\"ttnt\":\"5\",\"valid\":\"Y\",\"plat\":\"4\",\"time\":\"2024-07-15 13:45:00\",\"source\":\"-\",\"dest\":\"HOK\",\"seq\":\"1\"},{\"ttnt\":\"13\",\"valid\":\"Y\",\"plat\":\"4\",\"time\":\"2024-07-15 13:52:00\",\"source\":\"-\",\"dest\":\"HOK\",\"seq\":\"2\"},{\"ttnt\":\"19\",\"valid\":\"Y\",\"plat\":\"4\",\"time\":\"2024-07-15 13:58:00\",\"source\":\"-\",\"dest\":\"HOK\",\"seq\":\"3\"},{\"ttnt\":\"25\",\"valid\":\"Y\",\"plat\":\"4\",\"time\":\"2024-07-15 14:06:00\",\"source\":\"+\",\"dest\":\"HOK\",\"seq\":\"4\"}]}},\"HOK\":{\"AEL\":{\"1\":[{\"ttnt\":\"0\",\"valid\":\"Y\",\"plat\":\"1\",\"time\":\"2024-07-15 13:41:00\",\"source\":\"-\",\"dest\":\"AWE\",\"seq\":\"1\"},{\"ttnt\":\"10\",\"valid\":\"Y\",\"plat\":\"1\",\"time\":\"2024-07-15 13:50:00\",\"source\":\"+\",\"dest\":\"AWE\",\"seq\":\"2\"},{\"ttnt\":\"19\",\"valid\":\"Y\",\"plat\":\"1\",\"time\":\"2024-07-15 14:00:00\",\"source\":\"+\",\"dest\":\"AWE\",\"seq\":\"3\"},{\"ttnt\":\"29\",\"valid\":\"Y\",\"plat\":\"1\",\"time\":\"2024-07-15 14:10:00\",\"source\":\"+\",\"dest\":\"AWE\",\"seq\":\"4\"}]},\"TCL\":{\"4\":[{\"ttnt\":\"1\",\"valid\":\"Y\",\"plat\":\"4\",\"time\":\"2024-07-15 13:42:00\",\"source\":\"-\",\"dest\":\"TUC\",\"seq\":\"1\"},{\"ttnt\":\"8\",\"valid\":\"Y\",\"plat\":\"4\",\"time\":\"2024-07-15 13:48:00\",\"source\":\"+\",\"dest\":\"TUC\",\"seq\":\"2\"},{\"ttnt\":\"15\",\"valid\":\"Y\",\"plat\":\"4\",\"time\":\"2024-07-15 13:56:00\",\"source\":\"+\",\"dest\":\"TUC\",\"seq\":\"3\"},{\"ttnt\":\"22\",\"valid\":\"Y\",\"plat\":\"4\",\"time\":\"2024-07-15 14:02:00\",\"source\":\"+\",\"dest\":\"TUC\",\"seq\":\"4\"}]}},\"SYP\":{\"ISL\":{\"1\":[{\"seq\":\"1\",\"dest\":\"CHW\",\"plat\":\"1\",\"time\":\"2024-07-15 13:43:24\",\"ttnt\":\"3\",\"valid\":\"Y\",\"source\":\"-\"},{\"seq\":\"2\",\"dest\":\"CHW\",\"plat\":\"1\",\"time\":\"2024-07-15 13:47:24\",\"ttnt\":\"7\",\"valid\":\"Y\",\"source\":\"-\"},{\"seq\":\"3\",\"dest\":\"CHW\",\"plat\":\"1\",\"time\":\"2024-07-15 13:50:24\",\"ttnt\":\"10\",\"valid\":\"Y\",\"source\":\"-\"},{\"seq\":\"4\",\"dest\":\"CHW\",\"plat\":\"1\",\"time\":\"2024-07-15 13:54:24\",\"ttnt\":\"14\",\"valid\":\"Y\",\"source\":\"-\"}],\"2\":[{\"seq\":\"1\",\"dest\":\"KET\",\"plat\":\"2\",\"time\":\"2024-07-15 13:44:24\",\"ttnt\":\"4\",\"valid\":\"Y\",\"source\":\"-\"},{\"seq\":\"2\",\"dest\":\"KET\",\"plat\":\"2\",\"time\":\"2024-07-15 13:46:24\",\"ttnt\":\"6\",\"valid\":\"Y\",\"source\":\"-\"},{\"seq\":\"3\",\"dest\":\"KET\",\"plat\":\"2\",\"time\":\"2024-07-15 13:51:24\",\"ttnt\":\"11\",\"valid\":\"Y\",\"source\":\"-\"},{\"seq\":\"4\",\"dest\":\"KET\",\"plat\":\"2\",\"time\":\"2024-07-15 13:54:24\",\"ttnt\":\"14\",\"valid\":\"Y\",\"source\":\"-\"}]}},\"CEN\":{\"ISL\":{\"3\":[{\"seq\":\"1\",\"dest\":\"CHW\",\"plat\":\"3\",\"time\":\"2024-07-15 13:42:24\",\"ttnt\":\"2\",\"valid\":\"Y\",\"source\":\"-\"},{\"seq\":\"2\",\"dest\":\"CHW\",\"plat\":\"3\",\"time\":\"2024-07-15 13:46:24\",\"ttnt\":\"6\",\"valid\":\"Y\",\"source\":\"-\"},{\"seq\":\"3\",\"dest\":\"CHW\",\"plat\":\"3\",\"time\":\"2024-07-15 13:51:24\",\"ttnt\":\"11\",\"valid\":\"Y\",\"source\":\"-\"},{\"seq\":\"4\",\"dest\":\"CHW\",\"plat\":\"3\",\"time\":\"2024-07-15 13:54:24\",\"ttnt\":\"14\",\"valid\":\"Y\",\"source\":\"-\"}],\"4\":[{\"seq\":\"1\",\"dest\":\"KET\",\"plat\":\"4\",\"time\":\"2024-07-15 13:40:24\",\"ttnt\":\"0\",\"valid\":\"Y\",\"source\":\"-\"},{\"seq\":\"2\",\"dest\":\"KET\",\"plat\":\"4\",\"time\":\"2024-07-15 13:42:24\",\"ttnt\":\"2\",\"valid\":\"Y\",\"source\":\"-\"},{\"seq\":\"3\",\"dest\":\"KET\",\"plat\":\"4\",\"time\":\"2024-07-15 13:47:24\",\"ttnt\":\"7\",\"valid\":\"Y\",\"source\":\"-\"},{\"seq\":\"4\",\"dest\":\"KET\",\"plat\":\"4\",\"time\":\"2024-07-15 13:50:24\",\"ttnt\":\"10\",\"valid\":\"Y\",\"source\":\"-\"}]},\"TWL\":{\"1\":[{\"seq\":\"2\",\"dest\":\"TSW\",\"plat\":\"1\",\"time\":\"2024-07-15 13:45:16\",\"ttnt\":\"5\",\"valid\":\"Y\",\"source\":\"-\"},{\"seq\":\"4\",\"dest\":\"TSW\",\"plat\":\"1\",\"time\":\"2024-07-15 13:52:16\",\"ttnt\":\"12\",\"valid\":\"Y\",\"source\":\"-\"}],\"2\":[{\"seq\":\"1\",\"dest\":\"TSW\",\"plat\":\"2\",\"time\":\"2024-07-15 13:41:16\",\"ttnt\":\"1\",\"valid\":\"Y\",\"source\":\"-\"},{\"seq\":\"3\",\"dest\":\"TSW\",\"plat\":\"2\",\"time\":\"2024-07-15 13:48:16\",\"ttnt\":\"8\",\"valid\":\"Y\",\"source\":\"-\"}]}}}")
-        // r();
+        // var STATIONS = JSON.parse("{\"NAC\":{\"TML\":{\"1\":[{\"seq\":\"1\",\"dest\":\"TUM\",\"plat\":\"1\",\"time\":\"2024-07-15 13:41:22\",\"ttnt\":\"1\",\"valid\":\"Y\",\"source\":\"-\"},{\"seq\":\"2\",\"dest\":\"TUM\",\"plat\":\"1\",\"time\":\"2024-07-15 13:48:22\",\"ttnt\":\"8\",\"valid\":\"Y\",\"source\":\"-\"},{\"seq\":\"3\",\"dest\":\"TUM\",\"plat\":\"1\",\"time\":\"2024-07-15 13:55:22\",\"ttnt\":\"15\",\"valid\":\"Y\",\"source\":\"-\"},{\"seq\":\"4\",\"dest\":\"TUM\",\"plat\":\"1\",\"time\":\"2024-07-15 14:02:22\",\"ttnt\":\"22\",\"valid\":\"Y\",\"source\":\"-\"}],\"2\":[{\"seq\":\"1\",\"dest\":\"WKS\",\"plat\":\"2\",\"time\":\"2024-07-15 13:42:22\",\"ttnt\":\"2\",\"valid\":\"Y\",\"source\":\"-\"},{\"seq\":\"2\",\"dest\":\"WKS\",\"plat\":\"2\",\"time\":\"2024-07-15 13:49:22\",\"ttnt\":\"9\",\"valid\":\"Y\",\"source\":\"-\"},{\"seq\":\"3\",\"dest\":\"WKS\",\"plat\":\"2\",\"time\":\"2024-07-15 13:56:22\",\"ttnt\":\"16\",\"valid\":\"Y\",\"source\":\"-\"},{\"seq\":\"4\",\"dest\":\"WKS\",\"plat\":\"2\",\"time\":\"2024-07-15 14:03:22\",\"ttnt\":\"23\",\"valid\":\"Y\",\"source\":\"-\"}]},\"TCL\":{\"3\":[{\"ttnt\":\"2\",\"valid\":\"Y\",\"plat\":\"3\",\"time\":\"2024-07-15 13:41:00\",\"source\":\"-\",\"dest\":\"TUC\",\"seq\":\"1\"},{\"ttnt\":\"8\",\"valid\":\"Y\",\"plat\":\"3\",\"time\":\"2024-07-15 13:49:00\",\"source\":\"+\",\"dest\":\"TUC\",\"seq\":\"2\"},{\"ttnt\":\"15\",\"valid\":\"Y\",\"plat\":\"3\",\"time\":\"2024-07-15 13:55:00\",\"source\":\"+\",\"dest\":\"TUC\",\"seq\":\"3\"},{\"ttnt\":\"22\",\"valid\":\"Y\",\"plat\":\"3\",\"time\":\"2024-07-15 14:03:00\",\"source\":\"+\",\"dest\":\"TUC\",\"seq\":\"4\"}],\"4\":[{\"ttnt\":\"5\",\"valid\":\"Y\",\"plat\":\"4\",\"time\":\"2024-07-15 13:45:00\",\"source\":\"-\",\"dest\":\"HOK\",\"seq\":\"1\"},{\"ttnt\":\"13\",\"valid\":\"Y\",\"plat\":\"4\",\"time\":\"2024-07-15 13:52:00\",\"source\":\"-\",\"dest\":\"HOK\",\"seq\":\"2\"},{\"ttnt\":\"19\",\"valid\":\"Y\",\"plat\":\"4\",\"time\":\"2024-07-15 13:58:00\",\"source\":\"-\",\"dest\":\"HOK\",\"seq\":\"3\"},{\"ttnt\":\"25\",\"valid\":\"Y\",\"plat\":\"4\",\"time\":\"2024-07-15 14:06:00\",\"source\":\"+\",\"dest\":\"HOK\",\"seq\":\"4\"}]}},\"HOK\":{\"AEL\":{\"1\":[{\"ttnt\":\"0\",\"valid\":\"Y\",\"plat\":\"1\",\"time\":\"2024-07-15 13:41:00\",\"source\":\"-\",\"dest\":\"AWE\",\"seq\":\"1\"},{\"ttnt\":\"10\",\"valid\":\"Y\",\"plat\":\"1\",\"time\":\"2024-07-15 13:50:00\",\"source\":\"+\",\"dest\":\"AWE\",\"seq\":\"2\"},{\"ttnt\":\"19\",\"valid\":\"Y\",\"plat\":\"1\",\"time\":\"2024-07-15 14:00:00\",\"source\":\"+\",\"dest\":\"AWE\",\"seq\":\"3\"},{\"ttnt\":\"29\",\"valid\":\"Y\",\"plat\":\"1\",\"time\":\"2024-07-15 14:10:00\",\"source\":\"+\",\"dest\":\"AWE\",\"seq\":\"4\"}]},\"TCL\":{\"4\":[{\"ttnt\":\"1\",\"valid\":\"Y\",\"plat\":\"4\",\"time\":\"2024-07-15 13:42:00\",\"source\":\"-\",\"dest\":\"TUC\",\"seq\":\"1\"},{\"ttnt\":\"8\",\"valid\":\"Y\",\"plat\":\"4\",\"time\":\"2024-07-15 13:48:00\",\"source\":\"+\",\"dest\":\"TUC\",\"seq\":\"2\"},{\"ttnt\":\"15\",\"valid\":\"Y\",\"plat\":\"4\",\"time\":\"2024-07-15 13:56:00\",\"source\":\"+\",\"dest\":\"TUC\",\"seq\":\"3\"},{\"ttnt\":\"22\",\"valid\":\"Y\",\"plat\":\"4\",\"time\":\"2024-07-15 14:02:00\",\"source\":\"+\",\"dest\":\"TUC\",\"seq\":\"4\"}]}},\"SYP\":{\"ISL\":{\"1\":[{\"seq\":\"1\",\"dest\":\"CHW\",\"plat\":\"1\",\"time\":\"2024-07-15 13:43:24\",\"ttnt\":\"3\",\"valid\":\"Y\",\"source\":\"-\"},{\"seq\":\"2\",\"dest\":\"CHW\",\"plat\":\"1\",\"time\":\"2024-07-15 13:47:24\",\"ttnt\":\"7\",\"valid\":\"Y\",\"source\":\"-\"},{\"seq\":\"3\",\"dest\":\"CHW\",\"plat\":\"1\",\"time\":\"2024-07-15 13:50:24\",\"ttnt\":\"10\",\"valid\":\"Y\",\"source\":\"-\"},{\"seq\":\"4\",\"dest\":\"CHW\",\"plat\":\"1\",\"time\":\"2024-07-15 13:54:24\",\"ttnt\":\"14\",\"valid\":\"Y\",\"source\":\"-\"}],\"2\":[{\"seq\":\"1\",\"dest\":\"KET\",\"plat\":\"2\",\"time\":\"2024-07-15 13:44:24\",\"ttnt\":\"4\",\"valid\":\"Y\",\"source\":\"-\"},{\"seq\":\"2\",\"dest\":\"KET\",\"plat\":\"2\",\"time\":\"2024-07-15 13:46:24\",\"ttnt\":\"6\",\"valid\":\"Y\",\"source\":\"-\"},{\"seq\":\"3\",\"dest\":\"KET\",\"plat\":\"2\",\"time\":\"2024-07-15 13:51:24\",\"ttnt\":\"11\",\"valid\":\"Y\",\"source\":\"-\"},{\"seq\":\"4\",\"dest\":\"KET\",\"plat\":\"2\",\"time\":\"2024-07-15 13:54:24\",\"ttnt\":\"14\",\"valid\":\"Y\",\"source\":\"-\"}]}},\"CEN\":{\"ISL\":{\"3\":[{\"seq\":\"1\",\"dest\":\"CHW\",\"plat\":\"3\",\"time\":\"2024-07-15 13:42:24\",\"ttnt\":\"2\",\"valid\":\"Y\",\"source\":\"-\"},{\"seq\":\"2\",\"dest\":\"CHW\",\"plat\":\"3\",\"time\":\"2024-07-15 13:46:24\",\"ttnt\":\"6\",\"valid\":\"Y\",\"source\":\"-\"},{\"seq\":\"3\",\"dest\":\"CHW\",\"plat\":\"3\",\"time\":\"2024-07-15 13:51:24\",\"ttnt\":\"11\",\"valid\":\"Y\",\"source\":\"-\"},{\"seq\":\"4\",\"dest\":\"CHW\",\"plat\":\"3\",\"time\":\"2024-07-15 13:54:24\",\"ttnt\":\"14\",\"valid\":\"Y\",\"source\":\"-\"}],\"4\":[{\"seq\":\"1\",\"dest\":\"KET\",\"plat\":\"4\",\"time\":\"2024-07-15 13:40:24\",\"ttnt\":\"0\",\"valid\":\"Y\",\"source\":\"-\"},{\"seq\":\"2\",\"dest\":\"KET\",\"plat\":\"4\",\"time\":\"2024-07-15 13:42:24\",\"ttnt\":\"2\",\"valid\":\"Y\",\"source\":\"-\"},{\"seq\":\"3\",\"dest\":\"KET\",\"plat\":\"4\",\"time\":\"2024-07-15 13:47:24\",\"ttnt\":\"7\",\"valid\":\"Y\",\"source\":\"-\"},{\"seq\":\"4\",\"dest\":\"KET\",\"plat\":\"4\",\"time\":\"2024-07-15 13:50:24\",\"ttnt\":\"10\",\"valid\":\"Y\",\"source\":\"-\"}]},\"TWL\":{\"1\":[{\"seq\":\"2\",\"dest\":\"TSW\",\"plat\":\"1\",\"time\":\"2024-07-15 13:45:16\",\"ttnt\":\"5\",\"valid\":\"Y\",\"source\":\"-\"},{\"seq\":\"4\",\"dest\":\"TSW\",\"plat\":\"1\",\"time\":\"2024-07-15 13:52:16\",\"ttnt\":\"12\",\"valid\":\"Y\",\"source\":\"-\"}],\"2\":[{\"seq\":\"1\",\"dest\":\"TSW\",\"plat\":\"2\",\"time\":\"2024-07-15 13:41:16\",\"ttnt\":\"1\",\"valid\":\"Y\",\"source\":\"-\"},{\"seq\":\"3\",\"dest\":\"TSW\",\"plat\":\"2\",\"time\":\"2024-07-15 13:48:16\",\"ttnt\":\"8\",\"valid\":\"Y\",\"source\":\"-\"}]}}}"); r();
     </script>
 </body>
 </html>
