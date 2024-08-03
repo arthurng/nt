@@ -29,6 +29,8 @@
         .sTML { background-color: #923011 }
         .sTWL { background-color: #ED1D24 }
         #bpad { height: 50px; }
+        /* override for the pull to refresh plugin */
+        .ptr--ptr { box-shadow: inset 0 -3px 5px rgba(0,0,0,0) !important };
     </style>
 </head>
 <body>
@@ -39,6 +41,7 @@
     <template id="Tsta"><div class="sta"><div class="name">{{sta}} {{prox}}</div><div>{{{plats}}}</div></div></template>
     <template id="TstaDest"><div class="dest s{{line}}"><span class="plat">{{plat}}</span><span>{{dest}}</span><span style="float: right; font-weight: normal">&nbsp;mins</span><span class="ttnt">{{ttnt}}</span></div></template>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/mustache.js/0.1/mustache.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pulltorefreshjs/0.1.22/index.umd.min.js" integrity="sha512-djmgTiVR15A/7fON+ojDzFYrRsfVkzQZu07ZVb0zLC1OhA2iISP39Lzs05GqSKF0vPjkLzL5hBC+am6po7dKpA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
     <script>
         const $ = document.querySelector.bind( document );
         const DEFAULT_STA = ['NAC', 'HOK', 'CEN']; var PROX_STA = [];
@@ -81,7 +84,7 @@
         let f = () => {
             $('#spin').style.display = 'block';
             navigator.geolocation.getCurrentPosition(x => {
-                let t = STA_COORD.filter(y=>d(x.coords,y)<=500).map(y=>y.sta);
+                let t = STA_COORD.filter(y=>d(x.coords,y)<=1000).map(y=>y.sta);
                 t.except(PROX_STA.concat(DEFAULT_STA)).forEach(x => STATIONS[x] = REF[x].line); // add
                 PROX_STA.except(t).except(DEFAULT_STA).forEach(x => {delete STATIONS[x]}); // remove
                 PROX_STA = t;
@@ -108,6 +111,14 @@
         }
         main.style.height = window.innerHeight - 50;
         document.addEventListener("visibilitychange", e => { if (document.visibilityState == "visible"){f()} });
+        // pull to refresh
+        var PULL_FROM_TOP = true;
+        document.addEventListener("touchstart", e => { PULL_FROM_TOP = $("#main").scrollTop <= 5 });
+        PullToRefresh.init({
+            mainElement: '#main',
+            shouldPullToRefresh: () => PULL_FROM_TOP,
+            onRefresh: f
+        });
     </script>
 </body>
 </html>
