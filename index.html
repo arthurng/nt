@@ -12,7 +12,8 @@
         html,
         body  { margin: 0px; padding: 0px; font-family: -apple-system, Arial; background-color: #e0e0e0;
                 -webkit-user-select: none; user-select: none; -webkit-tap-highlight-color: transparent; overflow: hidden; }
-        #spin { display: none; width: 20px; position: absolute; top: 10px; right: 30px; animation: rotation 800ms infinite linear }
+        #spin { width: 20px; position: absolute; top: 10px; right: 30px; }
+        .prog { animation: rotation 800ms 2 linear }
         #titl { text-align: center; margin: 5px 0px; font-weight: bold; }
         #time { margin: 5px 0px; padding: 0px 20px; font-size: 10px; color: #a0a0a0; font-style: italic; }
         .sta  { background-color: #d0d0d0; margin: 5px 10px 15px 10px; padding: 10px; border-radius: 5px; font-weight: bold; }
@@ -68,7 +69,7 @@
         }
         // r - generate HTML and render (order: sta -> line -> dest -> time)
         let r = () => {
-            setTimeout(() => {$('#spin').style.display = 'none'}, 1600);
+            setTimeout(() => {$('#spin').className = ''}, 1600);
             let currTime = new Date();
             let ss = Object.entries(STATIONS).sort((a,b)=>PROX_STA.indexOf(a[0])>=0?(PROX_STA.indexOf(b[0])>=0?0:-1):0).map(([sta, line_dict]) => {
                 let plats = Object.entries(line_dict).map(([line, plat_dict]) => {
@@ -85,7 +86,7 @@
         }
         // f - running the actual fetch in a loop
         let f = () => {
-            $('#spin').style.display = 'block';
+            $('#spin').className = 'prog';
             navigator.geolocation.getCurrentPosition(x => {
                 let t = STA_COORD.filter(y=>d(x.coords,y)<=500).map(y=>y.sta);
                 t.except(PROX_STA.concat(DEFAULT_STA)).forEach(x => STATIONS[x] = REF[x].line); // add
