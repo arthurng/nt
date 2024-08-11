@@ -107,21 +107,25 @@
                 Object.entries(STATIONS).forEach(([s,ls]) => { Object.keys(ls).forEach(l => g(l,s)) });
             });
         }
-        // initialize
-        var STATIONS = Object.fromEntries(DEFAULT_STA.map(s=>[s, REF[s].line]));
-        let main = $('#main'); main.addEventListener('scroll', x=> { main.className = x.target.scrollTop>5?'scrolling':''});
-        if (window.location.host.indexOf('1')===0) {
-            document.querySelectorAll('#spin').forEach(e => {e.style.display='block'});
+        // i - initialization
+        let i = (x) => {
             f(); $('#titl').addEventListener('touchstart', f);
+            if (x) { document.querySelectorAll('#spin').forEach(e => {e.style.display='block'}); }
+        }
+        // initialize
+        var STATIONS = Object.fromEntries(DEFAULT_STA.map(s=>[s, REF[s].line])); let main = $('#main');
+        main.addEventListener('scroll', x=> { main.className = x.target.scrollTop>5?'scrolling':''});
+        // locked down - feel free to fork this and make it usable for yourself
+        if (window.location.host.indexOf('1')===0) {
+            i(true);
         } else {
-            // feel free to fork this and make it usable for yourself
             crypto.subtle.digest('SHA-256', new TextEncoder().encode(window.location.href.split('?')[1]))
                 .then(x=>Array.from(new Uint8Array(x)))
                 .then(x=>x.map(b => b.toString(16).padStart(2, '0')).join(''))
-                .then(h=>{if(h==='c0f3a4bad8c9b0e6f89d5624668f3df44f93bb7971323b496c0f3cd79f9f592c'){
-                    document.querySelectorAll('#spin').forEach(e => {e.style.display='block'});
-                    f(); $('#titl').addEventListener('touchstart', f);
-                } else $('#titl>span').innerText = 'Unknown User';
+                .then(h=>{
+                    if(h==='c0f3a4bad8c9b0e6f89d5624668f3df44f93bb7971323b496c0f3cd79f9f592c') { i(true); }
+                    else if(h==='ea325d761f98c6b73320e442b67f2a3574d9924716d788ddc0dbbdcaca853fe7') { i(false); }
+                    else { $('#titl>span').innerText = 'Unknown User'; }
             });
         }
         main.style.height = window.innerHeight - 50;
